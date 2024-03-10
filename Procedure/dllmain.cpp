@@ -1,5 +1,3 @@
-#include "pch.h"
-
 #include <windows.h>
 #include <stdio.h>
 #include <fstream>
