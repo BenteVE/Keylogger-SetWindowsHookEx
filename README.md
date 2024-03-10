@@ -1,8 +1,10 @@
 # Keylogger-SetWindowsHookEx
 
-A prototype for a key- and mouse logger that uses KeyboardProc and MouseProc to get the keystrokes and SetWindowsHookEx to install the procedures.
+A prototype for a key- and mouse logger that uses KeyboardProc and MouseProc to get the keystrokes and SetWindowsHookEx to install the procedures. All global hook functions must be in libraries.
 
 ## Installer
+
+<https://learn.microsoft.com/en-us/windows/win32/winmsg/using-hooks#installing-and-releasing-hook-procedures>
 
 ## Procedures
 

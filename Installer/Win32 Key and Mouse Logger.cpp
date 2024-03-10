@@ -23,6 +23,7 @@ void displayHelp() {
 HHOOK hookKeyboard;
 HHOOK hookMouse;
 
+// All global hook functions must be in libraries.
 void WINAPI installGlobalHooks(HMODULE lib)
 {
     // GetProcAddress is used with the Name-decoration convention (__stdcall calling convention is used to call Win32 API functions): 
@@ -84,9 +85,11 @@ int _tmain(int argc, TCHAR* argv[])
     // Install the procedures
     installGlobalHooks(lib);
 
-    // Architecture
-    // x86 must execute 64 bit code => code is run in this application => logfile created here
-    // x64 can execute 64 bit code = > code is run in the other application = > separate logfile!
+    // If a 32-bit application installs a global hook on 64-bit Windows, the 32-bit hook is injected into each 32-bit process.
+    // In a 64-bit process, the threads are still marked as "hooked." 
+    // However, because a 32-bit application must run the hook code, the system executes the hook in the hooking app's context; specifically, on the thread that called SetWindowsHookEx.
+    // This means that the hooking application must continue to pump messages or it might block the normal functioning of the 64-bit processes.
+    // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexa#remarks
 
     MSG message;
     // GetMessage retrieves a message from the calling thread's message queue. 
