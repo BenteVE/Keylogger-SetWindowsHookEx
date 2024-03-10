@@ -21,5 +21,3 @@ However, because a 32-bit application must run the hook code, the system execute
 specifically, on the thread that called SetWindowsHookEx.
 This means that the hooking application must continue to pump messages or it might block the normal functioning of the 64-bit processes.
 More info: <https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexw#remarks>
-
-NOTE: for some reason the x64 version detects keyboard and mouse in x86 applications and vice versa

