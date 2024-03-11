@@ -46,6 +46,10 @@ void WINAPI installGlobalHooks(HMODULE lib)
 	}
 
 	// install hook keyboard
+	// Alternative: WH_KEYBOARD_LL
+	// the WH_KEYBOARD_LL hook is not injected into another process.Instead, 
+	// the context switches back to the process that installed the hook and 
+	// it is called in its original context.Then the context switches back to the application that generated the event.
 	hookKeyboard = SetWindowsHookEx(WH_KEYBOARD, procedureKeyboard, lib, 0);
 	if (hookKeyboard == NULL) {
 		tcout << "Keyboard hook failed to install!" << std::endl;
@@ -53,6 +57,7 @@ void WINAPI installGlobalHooks(HMODULE lib)
 	}
 
 	// install hook mouse
+	// Alternative: WH_MOUSE_LL
 	hookMouse = SetWindowsHookEx(WH_MOUSE, procedureMouse, lib, 0);
 	if (hookMouse == NULL) {
 		tcout << "Mouse hook failed to install!" << std::endl;
@@ -84,12 +89,16 @@ int _tmain(int argc, TCHAR* argv[])
 	// Install the procedures
 	installGlobalHooks(lib);
 
+	// For KeyboardProc and MouseProc
 	// If a 32-bit application installs a global hook on 64-bit Windows, the 32-bit hook is injected into each 32-bit process.
 	// In a 64-bit process, the threads are still marked as "hooked." 
 	// However, because a 32-bit application must run the hook code, the system executes the hook in the hooking app's context; specifically, on the thread that called SetWindowsHookEx.
 	// This means that the hooking application must continue to pump messages or it might block the normal functioning of the 64-bit processes.
 	// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexa#remarks
 
+	// For LowLevelKeyboardProc and LowLevelMouseProc:
+	// hook is not injected into another process
+	// => we also need a messageloop here
 	MSG message;
 	// GetMessage retrieves a message from the calling thread's message queue. 
 	// The function dispatches incoming sent messages until a posted message is available for retrieval.
