@@ -75,11 +75,12 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboardLL(int nCode, W
 				}
 			}
 		}
-		
+
 	}
 	return CallNextHookEx(global, nCode, wParam, lParam);
 }
 
+// Note: MouseProc sometimes processes the same click twice
 extern "C" __declspec(dllexport) LRESULT WINAPI procedureMouse(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 
