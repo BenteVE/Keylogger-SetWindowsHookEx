@@ -89,7 +89,7 @@ DWORD installLowLevelMouseProc() {
 		return 1;
 	}
 
-	hookMouse = SetWindowsHookEx(WH_MOUSE, procedure, lib, 0);
+	hookMouse = SetWindowsHookEx(WH_MOUSE_LL, procedure, lib, 0);
 	if (hookMouse == NULL) {
 		tcout << "LowLevelMouseProc failed to install!" << std::endl;
 		return 1;
@@ -116,7 +116,7 @@ DWORD installKeyboardProc() {
 		return 1;
 	}
 
-	hookMouse = SetWindowsHookEx(WH_MOUSE, procedure, lib, 0);
+	hookMouse = SetWindowsHookEx(WH_KEYBOARD, procedure, lib, 0);
 	if (hookMouse == NULL) {
 		tcout << "KeyBoardProc failed to install!" << std::endl;
 		return 1;
@@ -143,7 +143,7 @@ DWORD installLowLevelKeyboardProc() {
 		return 1;
 	}
 
-	hookMouse = SetWindowsHookEx(WH_MOUSE, procedure, lib, 0);
+	hookMouse = SetWindowsHookEx(WH_KEYBOARD_LL, procedure, lib, 0);
 	if (hookMouse == NULL) {
 		tcout << "LowLevelKeyBoardProc failed to install!" << std::endl;
 		return 1;
