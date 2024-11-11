@@ -1,25 +1,38 @@
 # Keylogger-SetWindowsHookEx
 
-A prototype for a key- and mouse logger that uses KeyboardProc and MouseProc to get the keystrokes and SetWindowsHookEx to install the procedures. All global hook functions must be in libraries.
+A key- and mouse logger that uses [Windows API hooks](https://learn.microsoft.com/en-us/windows/win32/winmsg/hooks) to capture the keystrokes and `SetWindowsHookEx` to install the procedures.
 
 ## Installer
 
-<https://learn.microsoft.com/en-us/windows/win32/winmsg/using-hooks#installing-and-releasing-hook-procedures>
+The installer will start a new thread and use `SetWindowsHookEx` to install the hook procedures.
+After that, it will start a message loop in that thread.
+This is done because in case the procedure and the target application have a different architecture (x86 and x64).
+In this case, the system executes the hook on the thread that called SetWindowsHookEx instead of in the target application.
 
 ## Procedures
 
- This program installs a KeyboardProc and a MouseProc hook from a DLL with SetWindowsHookEx.
- When this hook is installed globally with SetWindowsHookEx, the hook logs all keyboard presses and mouse clicks and movements to a file.
+All hooks are installed globally because we want to capture the input to every process running on the system.
+Because of this, the procedures are located in a separate DLL.
 
-- KeyboardProc callback function: <https://learn.microsoft.com/en-us/windows/win32/winmsg/keyboardproc>
-- MouseProc callback function: <https://learn.microsoft.com/en-us/windows/win32/winmsg/mouseproc>
+Whenever a hook is triggered, the procedures will translate their function parameters to the actual keypress and log it to a file.
 
-## Architectures (x86/x64)
+## Demo
 
-Because hooks run in the context of an application, they must match the "bitness" of the application.
-If a 32-bit application installs a global hook on 64-bit Windows, the 32-bit hook is injected into each 32-bit process (the usual security boundaries apply).
-In a 64-bit process, the threads are still marked as "hooked."
-However, because a 32-bit application must run the hook code, the system executes the hook in the hooking app's context;
-specifically, on the thread that called SetWindowsHookEx.
-This means that the hooking application must continue to pump messages or it might block the normal functioning of the 64-bit processes.
-More info: <https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexw#remarks>
+1. Clone the repository:
+
+    ```bash
+    git clone https://github.com/BenteVE/Keylogger-SetWindowsHookEx.git
+    ```
+
+2. Build the installer executable and the procedures DLL in Visual Studio.
+
+3. Run the installer
+
+    ```cmd
+    ./keylogger_installer_x64.exe ./keylogger_procedure_x64.dll --keyboard-ll --mouse-ll
+    ```
+
+4. Verify that the keylogger is working.
+   All key and mouse presses should be logged to a file `keylog.txt` file on the desktop.
+
+    ![Demo](doc/demo.gif)
